@@ -3,3 +3,4 @@ tox-gh-actions
 django
 django-components
 pydantic
+pytest
