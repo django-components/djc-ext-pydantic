@@ -1,0 +1,11 @@
+tox
+pytest
+flake8
+flake8-pyproject
+isort
+pre-commit
+black
+mypy
+django
+django-components
+pydantic
