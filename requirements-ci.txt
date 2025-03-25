@@ -24,7 +24,7 @@ django-components==0.134
     # via -r requirements-ci.in
 djc-core-html-parser==1.0.2
     # via django-components
-filelock==3.17.0
+filelock==3.16.1
     # via
     #   tox
     #   virtualenv

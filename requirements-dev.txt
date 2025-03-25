@@ -32,7 +32,7 @@ djc-core-html-parser==1.0.2
     # via django-components
 exceptiongroup==1.2.2
     # via pytest
-filelock==3.17.0
+filelock==3.16.1
     # via
     #   tox
     #   virtualenv
