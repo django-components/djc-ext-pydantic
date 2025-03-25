@@ -1,5 +1,5 @@
 import re
-from typing import Any, Tuple
+from typing import Any, Dict, List, Tuple, Type, Union
 
 import pytest
 from django_components import Component, SlotContent, types
@@ -425,5 +425,79 @@ class TestValidation:
             slots={
                 "slot1": "SLOT1",
                 "slot2": lambda ctx, data, ref: "abc",
+            },
+        )
+
+    @djc_test(
+        components_settings={"extensions": [PydanticExtension]},
+    )
+    def test_handles_component_types(self):
+        TestArgs = Tuple[Type[Component]]
+
+        class TestKwargs(TypedDict):
+            component: Type[Component]
+
+        class TestComponent(Component[TestArgs, TestKwargs, Any, Any, Any, Any]):
+            def get_context_data(self, a, component, **attrs):
+                return {
+                    "component": component,
+                }
+
+            template: types.django_html = """
+                {% load component_tags %}
+                Component: <strong>{{ component }}</strong>
+            """
+
+        with pytest.raises(
+            ValidationError,
+            match=re.escape("Positional arguments of component 'TestComponent' failed validation"),
+        ):
+            TestComponent.render(
+                args=[123],  # type: ignore
+                kwargs={"component": 1},  # type: ignore
+            )
+
+        TestComponent.render(
+            args=(TestComponent,),
+            kwargs={"component": TestComponent},
+        )
+
+    def test_handles_typing_module(self):
+        TodoArgs = Tuple[
+            Union[str, int],
+            Dict[str, int],
+            List[str],
+            Tuple[int, Union[str, int]],
+        ]
+
+        class TodoKwargs(TypedDict):
+            one: Union[str, int]
+            two: Dict[str, int]
+            three: List[str]
+            four: Tuple[int, Union[str, int]]
+
+        class TodoData(TypedDict):
+            one: Union[str, int]
+            two: Dict[str, int]
+            three: List[str]
+            four: Tuple[int, Union[str, int]]
+
+        TodoComp = Component[TodoArgs, TodoKwargs, Any, TodoData, Any, Any]
+
+        class TestComponent(TodoComp):
+            def get_context_data(self, *args, **kwargs):
+                return {
+                    **kwargs,
+                }
+
+            template = ""
+
+        TestComponent.render(
+            args=("str", {"str": 123}, ["a", "b", "c"], (123, "123")),
+            kwargs={
+                "one": "str",
+                "two": {"str": 123},
+                "three": ["a", "b", "c"],
+                "four": (123, "123"),
             },
         )

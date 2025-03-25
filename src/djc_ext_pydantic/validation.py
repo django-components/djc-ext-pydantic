@@ -5,7 +5,6 @@ from weakref import WeakKeyDictionary
 from django_components import Component
 from pydantic import TypeAdapter, ValidationError
 
-
 ComponentTypes = Tuple[Any, Any, Any, Any, Any, Any]
 
 
