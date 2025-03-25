@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "djc-ext-pydantic"
+version = "0.1.0"
+requires-python = ">=3.8, <4.0"
+description = "Input validation with Pydantic for Django Components"
+keywords = ["pydantic", "django-components", "djc", "django", "components"]
+readme = "README.md"
+authors = [
+    {name = "Juro Oravec", email = "juraj.oravec.josefson@gmail.com"},
+]
+classifiers = [
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
+    "Framework :: Django :: 5.1",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Environment :: Web Environment",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    'django-components>=0.131',
+    'pydantic>=2.9',
+]
+license = {text = "MIT"}
+
+[project.urls]
+Homepage = "https://github.com/django-components/djc-ext-pydantic/"
+
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["djc_ext_pydantic*"]
+exclude = ["djc_ext_pydantic.tests*"]
+namespaces = false
+
+[tool.black]
+line-length = 119
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | activate
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 119
+multi_line_output = 3
+include_trailing_comma = "True"
+known_first_party = "djc_ext_pydantic"
+
+[tool.flake8]
+ignore = ['E302', 'W503']
+max-line-length = 119
+exclude = [
+  '__pycache__',
+  'env',
+  '.env',
+  '.venv',
+  '.tox',
+  'build',
+]
+
+[tool.mypy]
+check_untyped_defs = true
+ignore_missing_imports = true
+exclude = [
+    'build',
+]
+
+[[tool.mypy.overrides]]
+module = "djc_ext_pydantic.*"
+disallow_untyped_defs = true
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]
