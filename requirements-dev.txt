@@ -22,7 +22,7 @@ colorama==0.4.6
     # via tox
 distlib==0.3.9
     # via virtualenv
-django==5.1.7
+django==4.2.20
     # via
     #   -r requirements-dev.in
     #   django-components
@@ -30,6 +30,8 @@ django-components==0.130
     # via -r requirements-dev.in
 djc-core-html-parser==1.0.1
     # via django-components
+exceptiongroup==1.2.2
+    # via pytest
 filelock==3.17.0
     # via
     #   tox
@@ -73,7 +75,7 @@ pluggy==1.5.0
     # via
     #   pytest
     #   tox
-pre-commit==4.1.0
+pre-commit==4.2.0
     # via -r requirements-dev.in
 pycodestyle==2.12.1
     # via flake8
@@ -91,13 +93,24 @@ pyyaml==6.0.2
     # via pre-commit
 sqlparse==0.5.3
     # via django
+tomli==2.2.1
+    # via
+    #   black
+    #   flake8-pyproject
+    #   mypy
+    #   pyproject-api
+    #   pytest
+    #   tox
 tox==4.24.2
     # via -r requirements-dev.in
 typing-extensions==4.12.2
     # via
+    #   asgiref
+    #   black
     #   mypy
     #   pydantic
     #   pydantic-core
+    #   tox
 virtualenv==20.29.3
     # via
     #   pre-commit
