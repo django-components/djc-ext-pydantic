@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djc-ext-pydantic"
-version = "0.1.0"
+version = "1.0.0"
 requires-python = ">=3.8, <4.0"
 description = "Input validation with Pydantic for Django Components"
 keywords = ["pydantic", "django-components", "djc", "django", "components"]
@@ -33,7 +33,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
 ]
 dependencies = [
-    'django-components>=0.131',
+    'django-components>=0.136',
     'pydantic>=2.9',
 ]
 license = {text = "MIT"}
