@@ -6,7 +6,7 @@ from django_components.testing import djc_test
 # from pydantic import ValidationError # TODO: Set more specific error message
 from typing_extensions import TypedDict
 
-from djc_ext_pydantic.extension import PydanticExtension
+from djc_pydantic.extension import PydanticExtension
 from tests.testutils import setup_test_config
 
 setup_test_config()

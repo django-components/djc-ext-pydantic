@@ -4,7 +4,7 @@ from django_components.extension import (
     OnComponentDataContext,
 )
 
-from djc_ext_pydantic.validation import get_component_typing, validate_type
+from djc_pydantic.validation import get_component_typing, validate_type
 
 
 class PydanticExtension(ComponentExtension):

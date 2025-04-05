@@ -44,8 +44,8 @@ Homepage = "https://github.com/django-components/djc-ext-pydantic/"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["djc_ext_pydantic*"]
-exclude = ["djc_ext_pydantic.tests*"]
+include = ["djc_pydantic*"]
+exclude = ["djc_pydantic.tests*"]
 namespaces = false
 
 [tool.black]
@@ -71,7 +71,7 @@ profile = "black"
 line_length = 119
 multi_line_output = 3
 include_trailing_comma = "True"
-known_first_party = "djc_ext_pydantic"
+known_first_party = "djc_pydantic"
 
 [tool.flake8]
 ignore = ['E302', 'W503']
@@ -93,7 +93,7 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = "djc_ext_pydantic.*"
+module = "djc_pydantic.*"
 disallow_untyped_defs = true
 
 
