@@ -100,7 +100,7 @@ Then add the extension to your project:
 # settings.py
 COMPONENTS = {
     "extensions": [
-        "djc_ext_pydantic.PydanticExtension",
+        "djc_pydantic.PydanticExtension",
     ],
 }
 ```
@@ -109,7 +109,7 @@ or by reference:
 
 ```python
 # settings.py
-from djc_ext_pydantic import PydanticExtension
+from djc_pydantic import PydanticExtension
 
 COMPONENTS = {
     "extensions": [
