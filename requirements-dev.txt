@@ -79,9 +79,9 @@ pre-commit==4.2.0
     # via -r requirements-dev.in
 pycodestyle==2.13.0
     # via flake8
-pydantic==2.10.6
+pydantic==2.11.3
     # via -r requirements-dev.in
-pydantic-core==2.27.2
+pydantic-core==2.33.1
     # via pydantic
 pyflakes==3.3.2
     # via flake8
@@ -111,6 +111,9 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   tox
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 virtualenv==20.29.3
     # via
     #   pre-commit
