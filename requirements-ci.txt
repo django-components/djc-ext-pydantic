@@ -45,9 +45,9 @@ pluggy==1.5.0
     # via
     #   pytest
     #   tox
-pydantic==2.10.6
+pydantic==2.11.3
     # via -r requirements-ci.in
-pydantic-core==2.27.2
+pydantic-core==2.33.1
     # via pydantic
 pyproject-api==1.8.0
     # via tox
@@ -72,5 +72,8 @@ typing-extensions==4.12.2
     #   pydantic
     #   pydantic-core
     #   tox
+    #   typing-inspection
+typing-inspection==0.4.0
+    # via pydantic
 virtualenv==20.29.3
     # via tox
