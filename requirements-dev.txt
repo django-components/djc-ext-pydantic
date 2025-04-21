@@ -26,7 +26,7 @@ django==4.2.20
     # via
     #   -r requirements-dev.in
     #   django-components
-django-components==0.136
+django-components==0.139.1
     # via -r requirements-dev.in
 djc-core-html-parser==1.0.2
     # via django-components
@@ -107,6 +107,7 @@ typing-extensions==4.12.2
     # via
     #   asgiref
     #   black
+    #   django-components
     #   mypy
     #   pydantic
     #   pydantic-core
