@@ -20,7 +20,7 @@ django==4.2.20
     # via
     #   -r requirements-ci.in
     #   django-components
-django-components==0.140
+django-components==0.140.0
     # via -r requirements-ci.in
 djc-core-html-parser==1.0.2
     # via django-components
@@ -45,9 +45,9 @@ pluggy==1.5.0
     # via
     #   pytest
     #   tox
-pydantic==2.10.6
+pydantic==2.11.5
     # via -r requirements-ci.in
-pydantic-core==2.27.2
+pydantic-core==2.33.2
     # via pydantic
 pyproject-api==1.8.0
     # via tox
@@ -69,8 +69,12 @@ tox-gh-actions==3.3.0
 typing-extensions==4.12.2
     # via
     #   asgiref
+    #   django-components
     #   pydantic
     #   pydantic-core
     #   tox
+    #   typing-inspection
+typing-inspection==0.4.1
+    # via pydantic
 virtualenv==20.29.3
     # via tox
