@@ -26,7 +26,7 @@ django==4.2.20
     # via
     #   -r requirements-dev.in
     #   django-components
-django-components==0.140
+django-components==0.140.0
     # via -r requirements-dev.in
 djc-core-html-parser==1.0.2
     # via django-components
@@ -50,7 +50,7 @@ isort==6.0.1
     # via -r requirements-dev.in
 mccabe==0.7.0
     # via flake8
-mypy==1.15.0
+mypy==1.16.0
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via
@@ -65,7 +65,9 @@ packaging==24.2
     #   pytest
     #   tox
 pathspec==0.12.1
-    # via black
+    # via
+    #   black
+    #   mypy
 platformdirs==4.3.6
     # via
     #   black
@@ -107,6 +109,7 @@ typing-extensions==4.12.2
     # via
     #   asgiref
     #   black
+    #   django-components
     #   mypy
     #   pydantic
     #   pydantic-core
