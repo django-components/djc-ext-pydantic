@@ -4,60 +4,43 @@
 
 Validate components' inputs and outputs using Pydantic.
 
-`djc-ext-pydantic` is a [django-component](https://github.com/django-components/django-components) extension that integrates [Pydantic](https://pydantic.dev/) for input and data validation. It uses the types defined on the component's class to validate both inputs and outputs of Django components.
-
-### Validated Inputs and Outputs
-
-- **Inputs:**
-
-  - `args`: Positional arguments, expected to be defined as a [`Tuple`](https://docs.python.org/3/library/typing.html#typing.Tuple) type.
-  - `kwargs`: Keyword arguments, can be defined using [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) or Pydantic's [`BaseModel`](https://docs.pydantic.dev/latest/api/base_model/#pydantic.BaseModel).
-  - `slots`: Can also be defined using [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) or Pydantic's [`BaseModel`](https://docs.pydantic.dev/latest/api/base_model/#pydantic.BaseModel).
-
-- **Outputs:**
-  - Data returned from `get_context_data()`, `get_js_data()`, and `get_css_data()`, which can be defined using [`TypedDict`](https://docs.python.org/3/library/typing.html#typing.TypedDict) or Pydantic's [`BaseModel`](https://docs.pydantic.dev/latest/api/base_model/#pydantic.BaseModel).
+`djc-ext-pydantic` is a [django-component](https://github.com/django-components/django-components) extension that integrates [Pydantic](https://pydantic.dev/) for input and data validation.
 
 ### Example Usage
 
 ```python
+from django_components import Component, SlotInput
+from djc_pydantic import ArgsBaseModel
 from pydantic import BaseModel
-from typing import Tuple, TypedDict
 
-# 1. Define the types
-MyCompArgs = Tuple[str, ...]
+# 1. Define the Component with Pydantic models
+class MyComponent(Component):
+    class Args(ArgsBaseModel):
+        var1: str
 
-class MyCompKwargs(TypedDict):
-    name: str
-    age: int
+    class Kwargs(BaseModel):
+        name: str
+        age: int
 
-class MyCompSlots(TypedDict):
-    header: SlotContent
-    footer: SlotContent
+    class Slots(BaseModel):
+        header: SlotInput
+        footer: SlotInput
 
-class MyCompData(BaseModel):
-    data1: str
-    data2: int
+    class TemplateData(BaseModel):
+        data1: str
+        data2: int
 
-class MyCompJsData(BaseModel):
-    js_data1: str
-    js_data2: int
+    class JsData(BaseModel):
+        js_data1: str
+        js_data2: int
 
-class MyCompCssData(BaseModel):
-    css_data1: str
-    css_data2: int
+    class CssData(BaseModel):
+        css_data1: str
+        css_data2: int
 
-# 2. Define the component with those types
-class MyComponent(Component[
-    MyCompArgs,
-    MyCompKwargs,
-    MyCompSlots,
-    MyCompData,
-    MyCompJsData,
-    MyCompCssData,
-]):
     ...
 
-# 3. Render the component
+# 2. Render the component
 MyComponent.render(
     # ERROR: Expects a string
     args=(123,),
@@ -72,20 +55,6 @@ MyComponent.render(
         "foo": "invalid",
     },
 )
-```
-
-If you don't want to validate some parts, set them to [`Any`](https://docs.python.org/3/library/typing.html#typing.Any).
-
-```python
-class MyComponent(Component[
-    MyCompArgs,
-    MyCompKwargs,
-    MyCompSlots,
-    Any,
-    Any,
-    Any,
-]):
-    ...
 ```
 
 ## Installation
@@ -116,6 +85,25 @@ COMPONENTS = {
         PydanticExtension,
     ],
 }
+```
+
+## Validating args
+
+By default, Pydantic's `BaseModel` requires all fields to be passed as keyword arguments. If you want to validate positional arguments, you can use a custom subclass `ArgsBaseModel`:
+
+```python
+from pydantic import BaseModel
+from djc_pydantic import ArgsBaseModel
+
+class MyTable(Component):
+    class Args(ArgsBaseModel):
+        a: int
+        b: str
+        c: float
+
+MyTable.render(
+    args=[1, "hello", 3.14],
+)
 ```
 
 ## Release notes
