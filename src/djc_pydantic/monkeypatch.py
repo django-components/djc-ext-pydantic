@@ -2,7 +2,7 @@ from typing import Any, Type
 
 from django.template import NodeList
 from django.utils.safestring import SafeString
-from django_components import Component, Slot, SlotFunc
+from django_components import BaseNode, Component, Slot, SlotFunc
 from pydantic_core import core_schema
 
 
@@ -30,6 +30,17 @@ def monkeypatch_pydantic_core_schema() -> None:
         )
 
     Slot.__get_pydantic_core_schema__ = classmethod(slot_core_schema)  # type: ignore[attr-defined]
+
+    # Allow to use BaseNode class inside Pydantic models
+    def basenode_core_schema(cls: Type[BaseNode], _source_type: Any, _handler: Any) -> Any:
+        return core_schema.json_or_python_schema(
+            # Inside a Python object, the field must be an instance of BaseNode class
+            python_schema=core_schema.is_instance_schema(cls),
+            # Inside a JSON, the field is represented as a string
+            json_schema=core_schema.str_schema(),
+        )
+
+    BaseNode.__get_pydantic_core_schema__ = classmethod(basenode_core_schema)
 
     # Tell Pydantic to handle SafeString as regular string
     def safestring_core_schema(*args: Any, **kwargs: Any) -> Any:

@@ -1,106 +1,95 @@
-from django_components import ComponentExtension
-from django_components.extension import (
-    OnComponentDataContext,
-    OnComponentInputContext,
-)
+from typing import Any, Optional, Set
 
-from djc_pydantic.validation import get_component_typing, validate_type
+from django_components import ComponentExtension, ComponentNode, OnComponentInputContext  # noqa: F401
+from pydantic import BaseModel
 
 
 class PydanticExtension(ComponentExtension):
     """
     A Django component extension that integrates Pydantic for input and data validation.
 
-    This extension uses the types defined on the component's class to validate the inputs
-    and outputs of Django components.
-
-    The following are validated:
-
-    - Inputs:
-
-        - `args`
-        - `kwargs`
-        - `slots`
-
-    - Outputs (data returned from):
-
-        - `get_context_data()`
-        - `get_js_data()`
-        - `get_css_data()`
-
-    Validation is done using Pydantic's `TypeAdapter`. As such, the following are expected:
-
-    - Positional arguments (`args`) should be defined as a `Tuple` type.
-    - Other data (`kwargs`, `slots`, ...) are all objects or dictionaries, and can be defined
-      using either `TypedDict` or Pydantic's `BaseModel`.
+    NOTE: As of v0.140 the extension only ensures that the classes from django-components
+    can be used with pydantic. For the actual validation, subclass `Kwargs`, `Slots`, etc
+    from Pydantic's `BaseModel`, and use `ArgsBaseModel` for `Args`.
 
     **Example:**
 
     ```python
-    MyCompArgs = Tuple[str, ...]
+    from django_components import Component, SlotInput
+    from pydantic import BaseModel
 
-    class MyCompKwargs(TypedDict):
-        name: str
-        age: int
+    class MyComponent(Component):
+        class Args(ArgsBaseModel):
+            var1: str
 
-    class MyCompSlots(TypedDict):
-        header: SlotContent
-        footer: SlotContent
+        class Kwargs(BaseModel):
+            name: str
+            age: int
 
-    class MyCompData(BaseModel):
-        data1: str
-        data2: int
+        class Slots(BaseModel):
+            header: SlotInput
+            footer: SlotInput
 
-    class MyCompJsData(BaseModel):
-        js_data1: str
-        js_data2: int
+        class TemplateData(BaseModel):
+            data1: str
+            data2: int
 
-    class MyCompCssData(BaseModel):
-        css_data1: str
-        css_data2: int
+        class JsData(BaseModel):
+            js_data1: str
+            js_data2: int
 
-    class MyComponent(Component[MyCompArgs, MyCompKwargs, MyCompSlots, MyCompData, MyCompJsData, MyCompCssData]):
-        ...
-    ```
+        class CssData(BaseModel):
+            css_data1: str
+            css_data2: int
 
-    To exclude a field from validation, set its type to `Any`.
-
-    ```python
-    class MyComponent(Component[MyCompArgs, MyCompKwargs, MyCompSlots, Any, Any, Any]):
         ...
     ```
     """
 
     name = "pydantic"
 
-    # Validate inputs to the component on `Component.render()`
+    def __init__(self, *args: Any, **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self.rebuilt_comp_cls_ids: Set[str] = set()
+
+    # If the Pydantic models reference other types with forward references,
+    # the models may not be complete / "built" when the component is first loaded.
+    #
+    # Component classes may be created when other modules are still being imported,
+    # so we have to wait until we start rendering components to ensure that everything
+    # is loaded.
+    #
+    # At that point, we check for components whether they have any Pydantic models,
+    # and whether those models need to be rebuilt.
+    #
+    # See https://errors.pydantic.dev/2.11/u/class-not-fully-defined
+    #
+    # Otherwise, we get an error like:
+    #
+    # ```
+    # pydantic.errors.PydanticUserError: `Slots` is not fully defined; you should define
+    # `ComponentNode`, then call `Slots.model_rebuild()`
+    # ```
     def on_component_input(self, ctx: OnComponentInputContext) -> None:
-        maybe_inputs = get_component_typing(ctx.component_cls)
-        if maybe_inputs is None:
+        if ctx.component.class_id in self.rebuilt_comp_cls_ids:
             return
 
-        args_type, kwargs_type, slots_type, data_type, js_data_type, css_data_type = maybe_inputs
-        comp_name = ctx.component_cls.__name__
+        for name in ["Args", "Kwargs", "Slots", "TemplateData", "JsData", "CssData"]:
+            cls: Optional[BaseModel] = getattr(ctx.component, name, None)
+            if cls is None:
+                continue
 
-        # Validate args
-        validate_type(ctx.args, args_type, f"Positional arguments of component '{comp_name}' failed validation")
-        # Validate kwargs
-        validate_type(ctx.kwargs, kwargs_type, f"Keyword arguments of component '{comp_name}' failed validation")
-        # Validate slots
-        validate_type(ctx.slots, slots_type, f"Slots of component '{comp_name}' failed validation")
+            if hasattr(cls, "__pydantic_complete__") and not cls.__pydantic_complete__:
+                # When resolving forward references, Pydantic needs the module globals,
+                # AKA a dict that resolves those forward references.
+                #
+                # There's 2 problems here - user may define their own types which may need
+                # resolving. And we define the Slot type which needs to access `ComponentNode`.
+                #
+                # So as a solution, we provide to Pydantic a dictionary that contains globals
+                # from both 1. the component file and 2. this file (where we import `ComponentNode`).
+                mod = __import__(cls.__module__)
+                module_globals = mod.__dict__
+                cls.model_rebuild(_types_namespace={**globals(), **module_globals})
 
-    # Validate the data generated from `get_context_data()`, `get_js_data()` and `get_css_data()`
-    def on_component_data(self, ctx: OnComponentDataContext) -> None:
-        maybe_inputs = get_component_typing(ctx.component_cls)
-        if maybe_inputs is None:
-            return
-
-        args_type, kwargs_type, slots_type, data_type, js_data_type, css_data_type = maybe_inputs
-        comp_name = ctx.component_cls.__name__
-
-        # Validate data
-        validate_type(ctx.context_data, data_type, f"Data of component '{comp_name}' failed validation")
-        # Validate JS data
-        validate_type(ctx.js_data, js_data_type, f"JS data of component '{comp_name}' failed validation")
-        # Validate CSS data
-        validate_type(ctx.css_data, css_data_type, f"CSS data of component '{comp_name}' failed validation")
+        self.rebuilt_comp_cls_ids.add(ctx.component.class_id)

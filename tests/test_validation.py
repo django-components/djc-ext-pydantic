@@ -1,11 +1,12 @@
-from typing import Any, Dict, List, Tuple, Type, Union
+import re
+from typing import Dict, List, Tuple, Type, Union
 
 import pytest
-from django_components import Component, SlotContent, types
+from django_components import Component, SlotInput, types
 from django_components.testing import djc_test
-# from pydantic import ValidationError # TODO: Set more specific error message
-from typing_extensions import TypedDict
+from pydantic import BaseModel, ValidationError
 
+from djc_pydantic import ArgsBaseModel
 from djc_pydantic.extension import PydanticExtension
 from tests.testutils import setup_test_config
 
@@ -19,10 +20,10 @@ class TestValidation:
     )
     def test_no_validation_on_no_typing(self):
         class TestComponent(Component):
-            def get_context_data(self, var1, var2, variable, another, **attrs):
+            def get_template_data(self, args, kwargs, slots, context):
                 return {
-                    "variable": variable,
-                    "invalid_key": var1,
+                    "variable": kwargs["variable"],
+                    "invalid_key": args[0],
                 }
 
             template: types.django_html = """
@@ -37,19 +38,24 @@ class TestValidation:
             kwargs={"variable": "test", "another": 1},
             slots={
                 "my_slot": "MY_SLOT",
-                "my_slot2": lambda ctx, data, ref: "abc",
+                "my_slot2": lambda ctx: "abc",
             },
         )
 
     @djc_test(
         components_settings={"extensions": [PydanticExtension]},
     )
-    def test_no_validation_on_any(self):
-        class TestComponent(Component[Any, Any, Any, Any, Any, Any]):
-            def get_context_data(self, var1, var2, variable, another, **attrs):
+    def test_args(self):
+        class TestComponent(Component):
+            class Args(ArgsBaseModel):
+                var1: int
+                var2: str
+                var3: int
+
+            def get_template_data(self, args: Args, kwargs, slots, context):
                 return {
-                    "variable": variable,
-                    "invalid_key": var1,
+                    "variable": args.var3,
+                    "invalid_key": args.var1,
                 }
 
             template: types.django_html = """
@@ -59,93 +65,41 @@ class TestValidation:
                 Slot 2: {% slot "my_slot2" / %}
             """
 
-        TestComponent.render(
-            args=(123, "str"),
-            kwargs={"variable": "test", "another": 1},
-            slots={
-                "my_slot": "MY_SLOT",
-                "my_slot2": lambda ctx, data, ref: "abc",
-            },
-        )
-
-    @djc_test(
-        components_settings={"extensions": [PydanticExtension]},
-    )
-    def test_invalid_args(self):
-        TestArgs = Tuple[int, str, int]
-
-        class TestComponent(Component[TestArgs, Any, Any, Any, Any, Any]):
-            def get_context_data(self, var1, var2, variable, another, **attrs):
-                return {
-                    "variable": variable,
-                    "invalid_key": var1,
-                }
-
-            template: types.django_html = """
-                {% load component_tags %}
-                Variable: <strong>{{ variable }}</strong>
-                Slot 1: {% slot "my_slot" / %}
-                Slot 2: {% slot "my_slot2" / %}
-            """
-
-        # TODO: Set more specific error message
-        # with pytest.raises(
-        #     ValidationError,
-        #     match=re.escape("Positional arguments of component 'TestComponent' failed validation"),
-        # ):
-        with pytest.raises(Exception):
+        # Invalid args
+        with pytest.raises(ValidationError, match="1 validation error for Args\nvar3"):
             TestComponent.render(
-                args=(123, "str"),  # type: ignore
+                args=[123, "str"],
                 kwargs={"variable": "test", "another": 1},
                 slots={
                     "my_slot": "MY_SLOT",
-                    "my_slot2": lambda ctx, data, ref: "abc",
+                    "my_slot2": lambda ctx: "abc",
                 },
             )
 
-    @djc_test(
-        components_settings={"extensions": [PydanticExtension]},
-    )
-    def test_valid_args(self):
-        TestArgs = Tuple[int, str, int]
-
-        class TestComponent(Component[TestArgs, Any, Any, Any, Any, Any]):
-            def get_context_data(self, var1, var2, var3, variable, another, **attrs):
-                return {
-                    "variable": variable,
-                    "invalid_key": var1,
-                }
-
-            template: types.django_html = """
-                {% load component_tags %}
-                Variable: <strong>{{ variable }}</strong>
-                Slot 1: {% slot "my_slot" / %}
-                Slot 2: {% slot "my_slot2" / %}
-            """
-
+        # Valid args
         TestComponent.render(
             args=(123, "str", 456),
             kwargs={"variable": "test", "another": 1},
             slots={
                 "my_slot": "MY_SLOT",
-                "my_slot2": lambda ctx, data, ref: "abc",
+                "my_slot2": lambda ctx: "abc",
             },
         )
 
     @djc_test(
         components_settings={"extensions": [PydanticExtension]},
     )
-    def test_invalid_kwargs(self):
-        class TestKwargs(TypedDict):
-            var1: int
-            var2: str
-            var3: int
+    def test_kwargs(self):
+        class TestComponent(Component):
+            class Kwargs(BaseModel):
+                var1: int
+                var2: str
+                var3: int
 
-        class TestComponent(Component[Any, TestKwargs, Any, Any, Any, Any]):
-            def get_context_data(self, var1, var2, variable, another, **attrs):
+            def get_template_data(self, args, kwargs: Kwargs, slots, context):
                 return {
-                    "variable": variable,
-                    "invalid_key": var1,
+                    "variable": kwargs.var3,
+                    "invalid_key": kwargs.var1,
                 }
 
             template: types.django_html = """
@@ -155,66 +109,40 @@ class TestValidation:
                 Slot 2: {% slot "my_slot2" / %}
             """
 
-        # TODO: Set more specific error message
-        # with pytest.raises(
-        #     ValidationError,
-        #     match=re.escape("Keyword arguments of component 'TestComponent' failed validation"),
-        # ):
-        with pytest.raises(Exception):
+        # Invalid kwargs
+        with pytest.raises(ValidationError, match="3 validation errors for Kwargs"):
             TestComponent.render(
                 args=(123, "str"),
-                kwargs={"variable": "test", "another": 1},  # type: ignore
+                kwargs={"variable": "test", "another": 1},
                 slots={
                     "my_slot": "MY_SLOT",
-                    "my_slot2": lambda ctx, data, ref: "abc",
+                    "my_slot2": lambda ctx: "abc",
                 },
             )
 
-    @djc_test(
-        components_settings={"extensions": [PydanticExtension]},
-    )
-    def test_valid_kwargs(self):
-        class TestKwargs(TypedDict):
-            var1: int
-            var2: str
-            var3: int
-
-        class TestComponent(Component[Any, TestKwargs, Any, Any, Any, Any]):
-            def get_context_data(self, a, b, c, var1, var2, var3, **attrs):
-                return {
-                    "variable": var1,
-                    "invalid_key": var2,
-                }
-
-            template: types.django_html = """
-                {% load component_tags %}
-                Variable: <strong>{{ variable }}</strong>
-                Slot 1: {% slot "my_slot" / %}
-                Slot 2: {% slot "my_slot2" / %}
-            """
-
+        # Valid kwargs
         TestComponent.render(
-            args=(123, "str", 456),
+            args=(123, "str"),
             kwargs={"var1": 1, "var2": "str", "var3": 456},
             slots={
                 "my_slot": "MY_SLOT",
-                "my_slot2": lambda ctx, data, ref: "abc",
+                "my_slot2": lambda ctx: "abc",
             },
         )
 
     @djc_test(
         components_settings={"extensions": [PydanticExtension]},
     )
-    def test_invalid_slots(self):
-        class TestSlots(TypedDict):
-            slot1: SlotContent
-            slot2: SlotContent
+    def test_slots(self):
+        class TestComponent(Component):
+            class Slots(BaseModel):
+                slot1: SlotInput
+                slot2: SlotInput
 
-        class TestComponent(Component[Any, Any, TestSlots, Any, Any, Any]):
-            def get_context_data(self, var1, var2, variable, another, **attrs):
+            def get_template_data(self, args, kwargs, slots, context):
                 return {
-                    "variable": variable,
-                    "invalid_key": var1,
+                    "variable": kwargs["var1"],
+                    "invalid_key": args[0],
                 }
 
             template: types.django_html = """
@@ -224,65 +152,43 @@ class TestValidation:
                 Slot 2: {% slot "slot2" / %}
             """
 
-        # TODO: Set more specific error message
-        # with pytest.raises(
-        #     ValidationError,
-        #     match=re.escape("Slots of component 'TestComponent' failed validation"),
-        # ):
-        with pytest.raises(Exception):
+        # Invalid slots
+        with pytest.raises(
+            ValidationError,
+            match=re.escape("2 validation errors for Slots\nslot1"),
+        ):
             TestComponent.render(
                 args=(123, "str"),
-                kwargs={"variable": "test", "another": 1},
+                kwargs={"var1": 1, "var2": "str"},
                 slots={
                     "my_slot": "MY_SLOT",
-                    "my_slot2": lambda ctx, data, ref: "abc",
-                },  # type: ignore
+                    "my_slot2": lambda ctx: "abc",
+                },
             )
 
-    @djc_test(
-        components_settings={"extensions": [PydanticExtension]},
-    )
-    def test_valid_slots(self):
-        class TestSlots(TypedDict):
-            slot1: SlotContent
-            slot2: SlotContent
-
-        class TestComponent(Component[Any, Any, TestSlots, Any, Any, Any]):
-            def get_context_data(self, a, b, c, var1, var2, var3, **attrs):
-                return {
-                    "variable": var1,
-                    "invalid_key": var2,
-                }
-
-            template: types.django_html = """
-                {% load component_tags %}
-                Variable: <strong>{{ variable }}</strong>
-                Slot 1: {% slot "slot1" / %}
-                Slot 2: {% slot "slot2" / %}
-            """
-
+        # Valid slots
         TestComponent.render(
             args=(123, "str", 456),
             kwargs={"var1": 1, "var2": "str", "var3": 456},
             slots={
                 "slot1": "SLOT1",
-                "slot2": lambda ctx, data, ref: "abc",
+                "slot2": lambda ctx: "abc",
             },
         )
 
     @djc_test(
         components_settings={"extensions": [PydanticExtension]},
     )
-    def test_invalid_data(self):
-        class TestData(TypedDict):
-            data1: int
-            data2: str
+    def test_data__invalid(self):
+        class TestComponent(Component):
+            class TemplateData(BaseModel):
+                data1: int
+                data2: str
 
-        class TestComponent(Component[Any, Any, Any, TestData, Any, Any]):
-            def get_context_data(self, var1, var2, variable, another, **attrs):
+            def get_template_data(self, args, kwargs, slots, context):
                 return {
-                    "variable": variable,
-                    "invalid_key": var1,
+                    "variable": kwargs["variable"],
+                    "invalid_key": args[0],
                 }
 
             template: types.django_html = """
@@ -292,12 +198,10 @@ class TestValidation:
                 Slot 2: {% slot "slot2" / %}
             """
 
-        # TODO: Set more specific error message
-        # with pytest.raises(
-        #     ValidationError,
-        #     match=re.escape("Data of component 'TestComponent' failed validation"),
-        # ):
-        with pytest.raises(Exception):
+        with pytest.raises(
+            ValidationError,
+            match=re.escape("2 validation errors for TemplateData\ndata1"),
+        ):
             TestComponent.render(
                 args=(123, "str"),
                 kwargs={"variable": "test", "another": 1},
@@ -310,16 +214,16 @@ class TestValidation:
     @djc_test(
         components_settings={"extensions": [PydanticExtension]},
     )
-    def test_valid_data(self):
-        class TestData(TypedDict):
-            data1: int
-            data2: str
+    def test_data__valid(self):
+        class TestComponent(Component):
+            class TemplateData(BaseModel):
+                data1: int
+                data2: str
 
-        class TestComponent(Component[Any, Any, Any, TestData, Any, Any]):
-            def get_context_data(self, a, b, c, var1, var2, **attrs):
+            def get_template_data(self, args, kwargs, slots, context):
                 return {
-                    "data1": var1,
-                    "data2": var2,
+                    "data1": kwargs["var1"],
+                    "data2": kwargs["var2"],
                 }
 
             template: types.django_html = """
@@ -335,7 +239,7 @@ class TestValidation:
             kwargs={"var1": 1, "var2": "str", "var3": 456},
             slots={
                 "slot1": "SLOT1",
-                "slot2": lambda ctx, data, ref: "abc",
+                "slot2": lambda ctx: "abc",
             },
         )
 
@@ -343,26 +247,29 @@ class TestValidation:
         components_settings={"extensions": [PydanticExtension]},
     )
     def test_validate_all(self):
-        TestArgs = Tuple[int, str, int]
+        class TestComponent(Component):
+            class Args(ArgsBaseModel):
+                var1: int
+                var2: str
+                var3: int
 
-        class TestKwargs(TypedDict):
-            var1: int
-            var2: str
-            var3: int
+            class Kwargs(BaseModel):
+                var1: int
+                var2: str
+                var3: int
 
-        class TestSlots(TypedDict):
-            slot1: SlotContent
-            slot2: SlotContent
+            class Slots(BaseModel):
+                slot1: SlotInput
+                slot2: SlotInput
 
-        class TestData(TypedDict):
-            data1: int
-            data2: str
+            class TemplateData(BaseModel):
+                data1: int
+                data2: str
 
-        class TestComponent(Component[TestArgs, TestKwargs, TestSlots, TestData, Any, Any]):
-            def get_context_data(self, a, b, c, var1, var2, **attrs):
+            def get_template_data(self, args: Args, kwargs: Kwargs, slots: Slots, context):
                 return {
-                    "data1": var1,
-                    "data2": var2,
+                    "data1": kwargs.var1,
+                    "data2": kwargs.var2,
                 }
 
             template: types.django_html = """
@@ -378,7 +285,7 @@ class TestValidation:
             kwargs={"var1": 1, "var2": "str", "var3": 456},
             slots={
                 "slot1": "SLOT1",
-                "slot2": lambda ctx, data, ref: "abc",
+                "slot2": lambda ctx: "abc",
             },
         )
 
@@ -386,23 +293,27 @@ class TestValidation:
         components_settings={"extensions": [PydanticExtension]},
     )
     def test_handles_nested_types(self):
-        class NestedDict(TypedDict):
+        class NestedDict(BaseModel):
             nested: int
 
         NestedTuple = Tuple[int, str, int]
         NestedNested = Tuple[NestedDict, NestedTuple, int]
-        TestArgs = Tuple[NestedDict, NestedTuple, NestedNested]
 
-        class TestKwargs(TypedDict):
-            var1: NestedDict
-            var2: NestedTuple
-            var3: NestedNested
+        class TestComponent(Component):
+            class Args(ArgsBaseModel):
+                a: NestedDict
+                b: NestedTuple
+                c: NestedNested
 
-        class TestComponent(Component[TestArgs, TestKwargs, Any, Any, Any, Any]):
-            def get_context_data(self, a, b, c, var1, var2, **attrs):
+            class Kwargs(BaseModel):
+                var1: NestedDict
+                var2: NestedTuple
+                var3: NestedNested
+
+            def get_template_data(self, args: Args, kwargs: Kwargs, slots, context):
                 return {
-                    "data1": var1,
-                    "data2": var2,
+                    "data1": kwargs.var1,
+                    "data2": kwargs.var2,
                 }
 
             template: types.django_html = """
@@ -413,18 +324,16 @@ class TestValidation:
                 Slot 2: {% slot "slot2" / %}
             """
 
-        # TODO: Set more specific error message
-        # with pytest.raises(
-        #     ValidationError,
-        #     match=re.escape("Positional arguments of component 'TestComponent' failed validation"),
-        # ):
-        with pytest.raises(Exception):
+        with pytest.raises(
+            ValidationError,
+            match=re.escape("3 validation errors for Args\na"),
+        ):
             TestComponent.render(
-                args=(123, "str", 456),  # type: ignore
-                kwargs={"var1": 1, "var2": "str", "var3": 456},  # type: ignore
+                args=(123, "str", 456),
+                kwargs={"var1": 1, "var2": "str", "var3": 456},
                 slots={
                     "slot1": "SLOT1",
-                    "slot2": lambda ctx, data, ref: "abc",
+                    "slot2": lambda ctx: "abc",
                 },
             )
 
@@ -433,7 +342,7 @@ class TestValidation:
             kwargs={"var1": {"nested": 1}, "var2": (1, "str", 456), "var3": ({"nested": 1}, (1, "str", 456), 456)},
             slots={
                 "slot1": "SLOT1",
-                "slot2": lambda ctx, data, ref: "abc",
+                "slot2": lambda ctx: "abc",
             },
         )
 
@@ -441,15 +350,16 @@ class TestValidation:
         components_settings={"extensions": [PydanticExtension]},
     )
     def test_handles_component_types(self):
-        TestArgs = Tuple[Type[Component]]
+        class TestComponent(Component):
+            class Args(ArgsBaseModel):
+                a: Type[Component]
 
-        class TestKwargs(TypedDict):
-            component: Type[Component]
+            class Kwargs(BaseModel):
+                component: Type[Component]
 
-        class TestComponent(Component[TestArgs, TestKwargs, Any, Any, Any, Any]):
-            def get_context_data(self, a, component, **attrs):
+            def get_template_data(self, args: Args, kwargs: Kwargs, slots, context):
                 return {
-                    "component": component,
+                    "component": kwargs.component,
                 }
 
             template: types.django_html = """
@@ -457,15 +367,13 @@ class TestValidation:
                 Component: <strong>{{ component }}</strong>
             """
 
-        # TODO: Set more specific error message
-        # with pytest.raises(
-        #     ValidationError,
-        #     match=re.escape("Positional arguments of component 'TestComponent' failed validation"),
-        # ):
-        with pytest.raises(Exception):
+        with pytest.raises(
+            ValidationError,
+            match=re.escape("1 validation error for Args\na"),
+        ):
             TestComponent.render(
-                args=[123],  # type: ignore
-                kwargs={"component": 1},  # type: ignore
+                args=[123],
+                kwargs={"component": 1},
             )
 
         TestComponent.render(
@@ -474,32 +382,27 @@ class TestValidation:
         )
 
     def test_handles_typing_module(self):
-        TodoArgs = Tuple[
-            Union[str, int],
-            Dict[str, int],
-            List[str],
-            Tuple[int, Union[str, int]],
-        ]
+        class TestComponent(Component):
+            class Args(ArgsBaseModel):
+                a: Union[str, int]
+                b: Dict[str, int]
+                c: List[str]
+                d: Tuple[int, Union[str, int]]
 
-        class TodoKwargs(TypedDict):
-            one: Union[str, int]
-            two: Dict[str, int]
-            three: List[str]
-            four: Tuple[int, Union[str, int]]
+            class Kwargs(BaseModel):
+                one: Union[str, int]
+                two: Dict[str, int]
+                three: List[str]
+                four: Tuple[int, Union[str, int]]
 
-        class TodoData(TypedDict):
-            one: Union[str, int]
-            two: Dict[str, int]
-            three: List[str]
-            four: Tuple[int, Union[str, int]]
+            class TemplateData(BaseModel):
+                one: Union[str, int]
+                two: Dict[str, int]
+                three: List[str]
+                four: Tuple[int, Union[str, int]]
 
-        TodoComp = Component[TodoArgs, TodoKwargs, Any, TodoData, Any, Any]
-
-        class TestComponent(TodoComp):
-            def get_context_data(self, *args, **kwargs):
-                return {
-                    **kwargs,
-                }
+            def get_template_data(self, args: Args, kwargs: Kwargs, slots, context):
+                return kwargs
 
             template = ""
 
