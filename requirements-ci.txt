@@ -20,7 +20,7 @@ django==4.2.20
     # via
     #   -r requirements-ci.in
     #   django-components
-django-components==0.140
+django-components==0.140.0
     # via -r requirements-ci.in
 djc-core-html-parser==1.0.2
     # via django-components
@@ -60,7 +60,7 @@ tomli==2.2.1
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.25.0
+tox==4.27.0
     # via
     #   -r requirements-ci.in
     #   tox-gh-actions
@@ -69,8 +69,9 @@ tox-gh-actions==3.3.0
 typing-extensions==4.12.2
     # via
     #   asgiref
+    #   django-components
     #   pydantic
     #   pydantic-core
     #   tox
-virtualenv==20.29.3
+virtualenv==20.31.2
     # via tox
