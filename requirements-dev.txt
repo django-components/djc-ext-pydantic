@@ -10,7 +10,7 @@ asgiref==3.8.1
     # via django
 black==25.1.0
     # via -r requirements-dev.in
-cachetools==5.5.2
+cachetools==6.2.0
     # via tox
 cfgv==3.4.0
     # via pre-commit
@@ -26,13 +26,13 @@ django==4.2.20
     # via
     #   -r requirements-dev.in
     #   django-components
-django-components==0.140
+django-components==0.140.0
     # via -r requirements-dev.in
 djc-core-html-parser==1.0.2
     # via django-components
 exceptiongroup==1.2.2
     # via pytest
-filelock==3.16.1
+filelock==3.19.1
     # via
     #   tox
     #   virtualenv
@@ -58,7 +58,7 @@ mypy-extensions==1.0.0
     #   mypy
 nodeenv==1.9.1
     # via pre-commit
-packaging==24.2
+packaging==25.0
     # via
     #   black
     #   pyproject-api
@@ -66,12 +66,12 @@ packaging==24.2
     #   tox
 pathspec==0.12.1
     # via black
-platformdirs==4.3.6
+platformdirs==4.4.0
     # via
     #   black
     #   tox
     #   virtualenv
-pluggy==1.5.0
+pluggy==1.6.0
     # via
     #   pytest
     #   tox
@@ -85,7 +85,7 @@ pydantic-core==2.27.2
     # via pydantic
 pyflakes==3.3.2
     # via flake8
-pyproject-api==1.8.0
+pyproject-api==1.9.1
     # via tox
 pytest==8.3.5
     # via -r requirements-dev.in
@@ -101,17 +101,19 @@ tomli==2.2.1
     #   pyproject-api
     #   pytest
     #   tox
-tox==4.25.0
+tox==4.30.2
     # via -r requirements-dev.in
-typing-extensions==4.12.2
+typing-extensions==4.15.0
     # via
     #   asgiref
     #   black
+    #   django-components
     #   mypy
     #   pydantic
     #   pydantic-core
     #   tox
-virtualenv==20.29.3
+    #   virtualenv
+virtualenv==20.34.0
     # via
     #   pre-commit
     #   tox
