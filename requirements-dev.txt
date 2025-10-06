@@ -26,7 +26,7 @@ django==4.2.20
     # via
     #   -r requirements-dev.in
     #   django-components
-django-components==0.140
+django-components==0.140.0
     # via -r requirements-dev.in
 djc-core-html-parser==1.0.2
     # via django-components
@@ -79,9 +79,9 @@ pre-commit==4.2.0
     # via -r requirements-dev.in
 pycodestyle==2.13.0
     # via flake8
-pydantic==2.10.6
+pydantic==2.11.10
     # via -r requirements-dev.in
-pydantic-core==2.27.2
+pydantic-core==2.33.2
     # via pydantic
 pyflakes==3.3.2
     # via flake8
@@ -107,10 +107,14 @@ typing-extensions==4.12.2
     # via
     #   asgiref
     #   black
+    #   django-components
     #   mypy
     #   pydantic
     #   pydantic-core
     #   tox
+    #   typing-inspection
+typing-inspection==0.4.2
+    # via pydantic
 virtualenv==20.29.3
     # via
     #   pre-commit
