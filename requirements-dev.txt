@@ -50,7 +50,7 @@ isort==6.0.1
     # via -r requirements-dev.in
 mccabe==0.7.0
     # via flake8
-mypy==1.15.0
+mypy==1.18.2
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via
@@ -65,7 +65,9 @@ packaging==24.2
     #   pytest
     #   tox
 pathspec==0.12.1
-    # via black
+    # via
+    #   black
+    #   mypy
 platformdirs==4.3.6
     # via
     #   black
