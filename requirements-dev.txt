@@ -8,7 +8,7 @@ annotated-types==0.7.0
     # via pydantic
 asgiref==3.8.1
     # via django
-black==25.1.0
+black==25.11.0
     # via -r requirements-dev.in
 cachetools==5.5.2
     # via tox
@@ -91,6 +91,8 @@ pyproject-api==1.8.0
     # via tox
 pytest==8.3.5
     # via -r requirements-dev.in
+pytokens==0.3.0
+    # via black
 pyyaml==6.0.2
     # via pre-commit
 sqlparse==0.5.3
