@@ -87,9 +87,11 @@ pydantic-core==2.27.2
     # via pydantic
 pyflakes==3.3.2
     # via flake8
+pygments==2.19.2
+    # via pytest
 pyproject-api==1.8.0
     # via tox
-pytest==8.3.5
+pytest==8.4.2
     # via -r requirements-dev.in
 pyyaml==6.0.2
     # via pre-commit
