@@ -40,7 +40,7 @@ flake8==7.2.0
     # via
     #   -r requirements-dev.in
     #   flake8-pyproject
-flake8-pyproject==1.2.3
+flake8-pyproject==1.2.4
     # via -r requirements-dev.in
 identify==2.6.9
     # via pre-commit
