@@ -1,5 +1,4 @@
 tox
-tox-gh-actions
 django
 django-components
 pydantic
