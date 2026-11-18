@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "djc-ext-pydantic"
-version = "1.1.0"
-requires-python = ">=3.8, <4.0"
+version = "1.2.0"
+requires-python = ">=3.11, <4.0"
 description = "Input validation with Pydantic for Django Components"
 keywords = ["pydantic", "django-components", "djc", "django", "components"]
 readme = "README.md"
@@ -20,12 +20,10 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Environment :: Web Environment",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
