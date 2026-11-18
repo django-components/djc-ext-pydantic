@@ -10,22 +10,53 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # The repository's branch ruleset requires the checks "build (3.8)" to
+    # "build (3.13)", so keep this name when the matrix gains more values.
+    name: build (${{ matrix.python-version }})
+    # `ubuntu-latest` is Ubuntu 26.04, which has no Python 3.8 or 3.9 builds
+    # for actions/setup-python. Ubuntu 24.04 has every version in the matrix.
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        # `python-version` is the Python the tests run on. `tox-envs` lists the
+        # tox environments that job runs. The linters, type checker and coverage
+        # run once, on the newest Python.
+        include:
+          - python-version: '3.8'
+            tox-envs: py38
+          - python-version: '3.9'
+            tox-envs: py39
+          - python-version: '3.10'
+            tox-envs: py310
+          - python-version: '3.11'
+            tox-envs: py311
+          - python-version: '3.12'
+            tox-envs: py312
+          - python-version: '3.13'
+            tox-envs: py313,flake8,isort,coverage,mypy,black
 
     steps:
     - uses: actions/checkout@v6
 
-    - name: Set up Python ${{ matrix.python-version }}
+    # tox builds each test environment from the interpreter its name asks for
+    # (py38 uses python3.8), so this Python only has to be on the PATH.
+    - name: Set up Python ${{ matrix.python-version }} for the tests
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-        cache: "pip"
+
+    # The pinned versions in requirements-ci.txt need Python 3.11 or newer, so
+    # tox itself runs on 3.13 in every job. This step comes second so that its
+    # `python` and `pip` come first on the PATH.
+    - name: Set up Python 3.13 to run tox
+      uses: actions/setup-python@v6
+      with:
+        python-version: '3.13'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements-ci.txt
     - name: Run tests
-      run: tox
+      run: tox -e "$TOX_ENVS"
+      env:
+        TOX_ENVS: ${{ matrix.tox-envs }}
